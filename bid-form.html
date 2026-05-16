@@ -373,7 +373,50 @@ function submitForm() {
     alert('개인정보 수집 및 이용에 동의해주셔야 신청이 가능합니다.')
     return
   }
-  alert('신청서가 제출되었습니다.\n확인 후 연락드리겠습니다.')
+
+  const isPerson = document.getElementById('tabPerson').classList.contains('active')
+
+  const data = {
+    caseNo: document.getElementById('caseNo').value,
+    court: document.getElementById('court').value,
+    saleDate: document.getElementById('saleDate').value,
+    bidPrice: document.getElementById('bidPrice').value,
+    bidType: isPerson ? '개인' : '법인'
+  }
+
+  if (isPerson) {
+    data.name = document.getElementById('pName').value
+    data.ssn = document.getElementById('pSsn1').value + '-' + document.getElementById('pSsn2').value
+    data.address = document.getElementById('pAddr').value
+    data.phone = document.getElementById('pPhone').value
+    data.bank = document.getElementById('pBank').value
+    data.account = document.getElementById('pAccount').value
+  } else {
+    data.company = document.getElementById('cCompany').value
+    data.repTitle = document.getElementById('cTitle').value
+    data.name = document.getElementById('cRepName').value
+    data.bizNo = document.getElementById('cBizNo').value
+    data.corpNo = document.getElementById('cCorpNo').value
+    data.address = document.getElementById('cAddr').value
+    data.phone = document.getElementById('cPhone').value
+    data.bank = document.getElementById('cBank').value
+    data.account = document.getElementById('cAccount').value
+  }
+
+  fetch('/api/notion-bid', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.success) {
+      alert('✅ 신청서가 제출되었습니다.\n확인 후 연락드리겠습니다.')
+    } else {
+      alert('❌ 제출 실패: ' + (res.error || '다시 시도해주세요'))
+    }
+  })
+  .catch(() => alert('❌ 네트워크 오류. 다시 시도해주세요.'))
 }
 </script>
 
