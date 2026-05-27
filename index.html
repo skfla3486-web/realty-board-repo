@@ -6,31 +6,32 @@
 <title>자산 · 부채 대시보드</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- 구글에서 지마켓 산스를 불러오는 코드로 변경되었습니다 -->
+<link href="https://fonts.googleapis.com/css2?family=Gmarket+Sans:wght@300;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#14110c;
-  --surface:#1d1812;
-  --surface2:#262017;
-  --line:rgba(255,255,255,.07);
-  --line-gold:rgba(212,168,87,.18);
-  --text:#ece4d4;
-  --muted:#9b9079;
-  --faint:#6b6353;
-  --gold:#d4a857;
-  --green:#74c08a;
-  --green-dim:rgba(116,192,138,.14);
-  --red:#e0876f;
-  --red-dim:rgba(224,135,111,.14);
-  --blue:#8fb0d6;
-  --blue-dim:rgba(143,176,214,.14);
+  --bg:#f7f5f0;                      /* 전체 배경 (살짝 따뜻한 흰색) */
+  --surface:#ffffff;                 /* 카드 배경 */
+  --surface2:#f0ede6;                /* 탭·보조 배경 */
+  --line:rgba(0,0,0,.10);            /* 테두리 */
+  --line-gold:rgba(184,134,42,.30);
+  --text:#2a2620;                    /* 본문 글자 */
+  --muted:#6f6856;                   /* 흐린 글자 */
+  --faint:#9a9384;
+  --gold:#b8862a;                    /* 포인트 색 */
+  --green:#2f9e5e;
+  --green-dim:rgba(47,158,94,.12);
+  --red:#d05a3c;
+  --red-dim:rgba(208,90,60,.12);
+  --blue:#3f6fae;
+  --blue-dim:rgba(63,111,174,.12);
   --radius:14px;
   --mono:'IBM Plex Mono',ui-monospace,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
-  font-family:'IBM Plex Sans KR',sans-serif;
+  font-family: 'Gmarket Sans', sans-serif;
   background:var(--bg);
   color:var(--text);
   font-size:15px;
