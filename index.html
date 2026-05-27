@@ -9,21 +9,21 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f7f5f0;                      /* 전체 배경 (살짝 따뜻한 흰색) */
-  --surface:#ffffff;                 /* 카드 배경 */
-  --surface2:#f0ede6;                /* 탭·보조 배경 */
-  --line:rgba(0,0,0,.10);            /* 테두리 */
-  --line-gold:rgba(184,134,42,.30);
-  --text:#2a2620;                    /* 본문 글자 */
-  --muted:#6f6856;                   /* 흐린 글자 */
-  --faint:#9a9384;
-  --gold:#b8862a;                    /* 포인트 색 */
-  --green:#2f9e5e;
-  --green-dim:rgba(47,158,94,.12);
-  --red:#d05a3c;
-  --red-dim:rgba(208,90,60,.12);
-  --blue:#3f6fae;
-  --blue-dim:rgba(63,111,174,.12);
+  --bg:#14110c;
+  --surface:#1d1812;
+  --surface2:#262017;
+  --line:rgba(255,255,255,.07);
+  --line-gold:rgba(212,168,87,.18);
+  --text:#ece4d4;
+  --muted:#9b9079;
+  --faint:#6b6353;
+  --gold:#d4a857;
+  --green:#74c08a;
+  --green-dim:rgba(116,192,138,.14);
+  --red:#e0876f;
+  --red-dim:rgba(224,135,111,.14);
+  --blue:#8fb0d6;
+  --blue-dim:rgba(143,176,214,.14);
   --radius:14px;
   --mono:'IBM Plex Mono',ui-monospace,monospace;
 }
@@ -285,7 +285,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)}
       </div>
     </div>
     <div class="field" id="wrap-principal">
-      <label>원금잔액 (남은 빚)</label>
+      <label id="lbl-principal">원금잔액 (남은 빚)</label>
       <input type="text" inputmode="numeric" id="f-principal" class="num-in" placeholder="0">
     </div>
     <div class="field" id="wrap-amount">
@@ -344,8 +344,8 @@ const TYPES = {
   asset:   {label:'자산',     group:'asset'},
 };
 const isDebt = t => TYPES[t].group==='debt';
-const hasMonthly = t => t==='fixed' || isDebt(t);
-const hasDates = t => t==='fixed' || isDebt(t);
+const hasMonthly = t => t==='fixed' || t==='loan' || t==='debt_adj';
+const hasDates = t => t==='fixed' || t==='loan' || t==='debt_adj';
 
 let state = {banks:[], items:[]};
 let editItemId = null, editBankId = null, assetStatusSel = 'current';
@@ -390,6 +390,7 @@ function bankName(id){ const b=state.banks.find(x=>x.id===id); return b?b.name:'
 function statusOf(it){
   if(it.type==='asset') return null;
   if(isDebt(it.type) && (it.principal||0)<=0) return 'done';
+  if(!hasDates(it.type)) return 'ongoing';
   const today=new Date(); today.setHours(0,0,0,0);
   if(it.start){ const s=new Date(it.start); if(today<s) return 'scheduled'; }
   if(it.end){ const e=new Date(it.end); if(today>e) return 'done'; }
@@ -397,6 +398,7 @@ function statusOf(it){
 }
 const STATUS_LABEL = {ongoing:'상환중', scheduled:'상환예정', done:'상환완료'};
 function roundOf(it){
+  if(!hasDates(it.type)) return null;
   if(!it.start || !it.end) return null;
   const s=new Date(it.start), e=new Date(it.end), t=new Date();
   const total=(e.getFullYear()-s.getFullYear())*12+(e.getMonth()-s.getMonth())+1;
@@ -459,8 +461,8 @@ function renderDashboard(){
           <span class="brk-name">${esc(i.name)} <span class="tag t-debt">${TYPES[i.type].label}</span></span>
           <span class="brk-val num">${compact(i.principal||0)}</span>
         </div>
-        <div class="bar"><span style="width:${pct}%;--c:var(--red)"></span></div>
-        <div class="k-sub" style="margin-top:4px">${r?`회차 ${r.cur}/${r.total} (${pct}%)`:'기간 미설정'} · 월 ${compact(i.monthly||0)}</div>
+        ${hasDates(i.type)?`<div class="bar"><span style="width:${pct}%;--c:var(--red)"></span></div>
+        <div class="k-sub" style="margin-top:4px">${r?`회차 ${r.cur}/${r.total} (${pct}%)`:'기간 미설정'} · 월 ${compact(i.monthly||0)}</div>`:``}
       </div>`;}).join('')
     : `<div class="k-sub">등록된 부채가 없습니다.</div>`;
 
@@ -513,7 +515,7 @@ function renderItems(){
       const statusCell = st?`<span class="tag t-${st}">${STATUS_LABEL[st]}</span>`
         : (i.type==='asset'?`<span class="tag ${i.assetStatus==='planned'?'t-expense':'t-asset'}">${i.assetStatus==='planned'?'예정':'현재'}</span>`:'–');
       const roundCell = r?`<span class="round">${r.cur}/${r.total}</span>`:'–';
-      const payBtn = (isDebt(i.type) && (i.principal||0)>0)
+      const payBtn = (isDebt(i.type) && hasMonthly(i.type) && (i.principal||0)>0)
         ? `<button class="mini pay" data-pay="${i.id}">납입</button>` : '';
       return `<tr>
         <td class="cell-name">${esc(i.name)}</td>
@@ -554,6 +556,7 @@ function syncItemFields(){
   const t=$('f-type').value;
   $('wrap-assetStatus').classList.toggle('hidden', t!=='asset');
   $('wrap-principal').classList.toggle('hidden', !isDebt(t));
+  $('lbl-principal').textContent = (t==='unpaid') ? '전체 금액' : '원금잔액 (남은 빚)';
   $('wrap-amount').classList.toggle('hidden', t!=='asset');
   $('wrap-monthly').classList.toggle('hidden', !hasMonthly(t));
   $('wrap-dates').classList.toggle('hidden', !hasDates(t));
@@ -673,7 +676,7 @@ $('seedBtn').onclick=()=>{
   state.items=[
     {id:uid(),name:'신용대출',type:'loan',principal:24000000,amount:0,monthly:850000,start:'2024-03-01',end:'2027-02-28',bankId:b2,assetStatus:null},
     {id:uid(),name:'마이너스 통장',type:'loan',principal:5000000,amount:0,monthly:200000,start:'2025-01-01',end:'2026-12-31',bankId:b1,assetStatus:null},
-    {id:uid(),name:'지방세 미납',type:'unpaid',principal:1200000,amount:0,monthly:400000,start:'2026-05-01',end:'2026-08-31',bankId:null,assetStatus:null},
+    {id:uid(),name:'지방세 미납',type:'unpaid',principal:1200000,amount:0,monthly:0,start:'',end:'',bankId:null,assetStatus:null},
     {id:uid(),name:'월세',type:'fixed',principal:0,amount:0,monthly:600000,start:'',end:'',bankId:b1,assetStatus:null},
     {id:uid(),name:'보험료',type:'fixed',principal:0,amount:0,monthly:180000,start:'',end:'',bankId:null,assetStatus:null},
     {id:uid(),name:'전세보증금',type:'asset',principal:0,amount:50000000,monthly:0,start:'',end:'',bankId:null,assetStatus:'current'},
